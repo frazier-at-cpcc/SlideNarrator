@@ -60,35 +60,56 @@ python main.py presentation.pptx
 SlideNarrator consists of three main components:
 
 1. **SlideParser** (`src/slide_parser.py`): Extracts content from PowerPoint slides
-2. **ScriptGenerator** (`src/script_generator.py`): Generates AI-powered narration for individual slides
-3. **ScriptPolisher** (`src/script_polisher.py`): Reviews and polishes the complete script for flow and consistency
+2. **ScriptGenerator** (`src/script_generator.py`): Generates AI-powered narration using Claude Agent SDK
+3. **ScriptPolisher** (`src/script_polisher.py`): Reviews and polishes scripts using Claude Agent SDK
+
+Built with the **Claude Agent SDK** for advanced agentic capabilities and better AI performance.
+
+## Why Claude Agent SDK?
+
+SlideNarrator leverages the Claude Agent SDK to provide:
+
+- **Better Contextual Understanding**: The Agent SDK enables Claude to better understand and reason about the complete presentation
+- **Agentic Workflows**: More sophisticated processing with multi-step reasoning
+- **Improved Consistency**: Better handling of long-form content with automatic context management
+- **Enhanced Flexibility**: Ability to use custom tools and hooks for specialized tasks
+- **Production Ready**: Built on Anthropic's official agent framework with reliability and performance optimizations
+
+The Agent SDK allows SlideNarrator to iterate on scripts intelligently, ensuring higher quality narration with better flow and coherence across all slides.
 
 ## Installation
 
 ### Prerequisites
 
-- Python 3.8 or higher
+- Python 3.10 or higher (required for Claude Agent SDK)
+- Node.js (required for Claude Agent SDK)
+- Claude Code 2.0.0+ installed: `npm install -g @anthropic-ai/claude-code`
 - Anthropic API key (get one at https://console.anthropic.com/)
 
 ### Setup
 
-1. Clone or download this repository:
+1. **Install Claude Code** (if not already installed):
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+
+2. Clone or download this repository:
 ```bash
 cd SlideNarrator
 ```
 
-2. Create a virtual environment (recommended):
+3. Create a virtual environment (recommended):
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. Install dependencies:
+4. Install Python dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Set up your API key:
+5. Set up your API key:
 ```bash
 cp .env.example .env
 ```
@@ -236,6 +257,36 @@ streamlit run app.py --server.enableCORS false --server.enableXsrfProtection tru
 ```
 
 For production deployments, consider using [Streamlit Cloud](https://streamlit.io/cloud) or containerizing with Docker.
+
+### Docker Deployment
+
+Build and run with Docker:
+
+```bash
+# Build the image
+docker build -t slidenarrator .
+
+# Run the container
+docker run -p 8501:8501 -e ANTHROPIC_API_KEY="your_api_key" slidenarrator
+```
+
+Or use Docker Compose:
+
+```bash
+# Set your API key in .env file
+echo "ANTHROPIC_API_KEY=your_api_key" > .env
+
+# Start the service
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop the service
+docker-compose down
+```
+
+Access the app at `http://localhost:8501`
 
 ## Output Files
 

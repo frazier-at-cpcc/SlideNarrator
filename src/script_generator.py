@@ -1,10 +1,11 @@
 """
-ScriptGenerator module for generating narration scripts for slides using AI.
+ScriptGenerator module for generating narration scripts for slides using Claude Agent SDK.
 """
 
 from typing import List, Dict, Any, Optional
-from anthropic import Anthropic
+import anyio
 import os
+from claude_agent_sdk import query
 from .slide_parser import SlideContent
 
 
@@ -34,22 +35,42 @@ class SlideScript:
 
 
 class ScriptGenerator:
-    """Generates narration scripts for slides using Claude AI."""
+    """Generates narration scripts for slides using Claude Agent SDK."""
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "claude-3-5-sonnet-20241022"):
+    def __init__(self, api_key: Optional[str] = None):
         """
         Initialize the script generator.
 
         Args:
             api_key: Anthropic API key (defaults to ANTHROPIC_API_KEY env var)
-            model: Claude model to use for generation
+                     Note: Claude Agent SDK uses the environment variable by default
         """
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
         if not self.api_key:
             raise ValueError("Anthropic API key not provided and ANTHROPIC_API_KEY env var not set")
 
-        self.client = Anthropic(api_key=self.api_key)
-        self.model = model
+        # Set the environment variable for the Agent SDK
+        os.environ["ANTHROPIC_API_KEY"] = self.api_key
+
+    async def _query_agent(self, prompt: str) -> str:
+        """
+        Query the Claude Agent SDK and return the response.
+
+        Args:
+            prompt: The prompt to send to Claude
+
+        Returns:
+            The complete response text from Claude
+        """
+        response_parts = []
+
+        async for message in query(prompt=prompt):
+            # Collect all message parts
+            response_parts.append(str(message))
+
+        # Join all parts to get complete response
+        full_response = "".join(response_parts).strip()
+        return full_response
 
     def generate_script_for_slide(
         self,
@@ -59,7 +80,7 @@ class ScriptGenerator:
         tone: str = "professional"
     ) -> SlideScript:
         """
-        Generate a narration script for a single slide.
+        Generate a narration script for a single slide using Claude Agent SDK.
 
         Args:
             slide: SlideContent object containing slide information
@@ -73,17 +94,10 @@ class ScriptGenerator:
         # Build the prompt
         prompt = self._build_slide_prompt(slide, presentation_context, previous_scripts, tone)
 
-        # Call Claude API
+        # Query Claude Agent SDK
         try:
-            message = self.client.messages.create(
-                model=self.model,
-                max_tokens=1024,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
-            )
-
-            narration = message.content[0].text.strip()
+            # Run the async query in a sync context
+            narration = anyio.run(self._query_agent, prompt)
 
             # Estimate duration (rough estimate: 150 words per minute)
             word_count = len(narration.split())

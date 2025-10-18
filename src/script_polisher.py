@@ -1,10 +1,11 @@
 """
-ScriptPolisher module for reviewing and improving the overall narration flow.
+ScriptPolisher module for reviewing and improving the overall narration flow using Claude Agent SDK.
 """
 
 from typing import List, Dict, Any, Optional
-from anthropic import Anthropic
+import anyio
 import os
+from claude_agent_sdk import query
 from .script_generator import SlideScript
 
 
@@ -59,22 +60,42 @@ class PolishedScript:
 
 
 class ScriptPolisher:
-    """Polishes and improves the overall narration script using Claude AI."""
+    """Polishes and improves the overall narration script using Claude Agent SDK."""
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "claude-3-5-sonnet-20241022"):
+    def __init__(self, api_key: Optional[str] = None):
         """
         Initialize the script polisher.
 
         Args:
             api_key: Anthropic API key (defaults to ANTHROPIC_API_KEY env var)
-            model: Claude model to use for polishing
+                     Note: Claude Agent SDK uses the environment variable by default
         """
         self.api_key = api_key or os.getenv("ANTHROPIC_API_KEY")
         if not self.api_key:
             raise ValueError("Anthropic API key not provided and ANTHROPIC_API_KEY env var not set")
 
-        self.client = Anthropic(api_key=self.api_key)
-        self.model = model
+        # Set the environment variable for the Agent SDK
+        os.environ["ANTHROPIC_API_KEY"] = self.api_key
+
+    async def _query_agent(self, prompt: str) -> str:
+        """
+        Query the Claude Agent SDK and return the response.
+
+        Args:
+            prompt: The prompt to send to Claude
+
+        Returns:
+            The complete response text from Claude
+        """
+        response_parts = []
+
+        async for message in query(prompt=prompt):
+            # Collect all message parts
+            response_parts.append(str(message))
+
+        # Join all parts to get complete response
+        full_response = "".join(response_parts).strip()
+        return full_response
 
     def polish_scripts(
         self,
@@ -82,7 +103,7 @@ class ScriptPolisher:
         focus_areas: Optional[List[str]] = None
     ) -> PolishedScript:
         """
-        Review and polish the complete presentation script.
+        Review and polish the complete presentation script using Claude Agent SDK.
 
         Args:
             scripts: List of SlideScript objects
@@ -98,16 +119,8 @@ class ScriptPolisher:
         prompt = self._build_polish_prompt(scripts, focus_areas)
 
         try:
-            # Call Claude API with a larger context window for the full script
-            message = self.client.messages.create(
-                model=self.model,
-                max_tokens=8000,
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
-            )
-
-            response = message.content[0].text.strip()
+            # Query Claude Agent SDK
+            response = anyio.run(self._query_agent, prompt)
 
             # Parse the response to extract polished scripts
             polished_scripts, improvements = self._parse_polish_response(response, scripts)
