@@ -10,6 +10,50 @@ AI-powered PowerPoint narration script generator using Claude. SlideNarrator aut
 - **Multiple Output Formats**: Exports scripts as Markdown, JSON, and plain text
 - **Customizable Tone**: Choose from professional, casual, educational, enthusiastic, or formal tones
 - **Duration Estimation**: Provides estimated speaking time for each slide and the full presentation
+- **Web Interface**: User-friendly Streamlit web application for easy interaction
+- **CLI Tool**: Powerful command-line interface for automation and scripting
+
+## Quick Start
+
+### Option 1: Web Interface (Recommended for beginners)
+
+**One-line start** (Unix/Mac/Linux):
+```bash
+./run_web.sh
+```
+
+**Windows**:
+```cmd
+run_web.bat
+```
+
+Or manually:
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Set your API key
+export ANTHROPIC_API_KEY="your_api_key_here"
+
+# Launch the web app
+streamlit run app.py
+```
+
+Then open your browser to `http://localhost:8501` and upload your PowerPoint file!
+
+### Option 2: Command Line
+
+```bash
+# Install dependencies
+pip install -r requirements.txt
+
+# Set up .env file
+cp .env.example .env
+# Edit .env and add your API key
+
+# Generate narration
+python main.py presentation.pptx
+```
 
 ## Architecture
 
@@ -133,6 +177,65 @@ optional arguments:
   --api-key API_KEY     Anthropic API key (overrides env var)
   --no-export           Don't export results to files
 ```
+
+## Web Interface (Streamlit)
+
+SlideNarrator includes a beautiful, user-friendly web interface built with Streamlit.
+
+### Starting the Web App
+
+```bash
+streamlit run app.py
+```
+
+The app will open in your browser at `http://localhost:8501`
+
+### Using the Web Interface
+
+1. **Configure API Key**: Enter your Anthropic API key in the sidebar (or set `ANTHROPIC_API_KEY` environment variable)
+
+2. **Customize Settings**: Choose your preferred:
+   - Narration tone (professional, casual, educational, etc.)
+   - Presentation context (optional but recommended)
+   - Polish focus areas (transitions, consistency, pacing, engagement, clarity)
+
+3. **Upload Presentation**: Drag and drop or browse for your .pptx file
+
+4. **Generate**: Click "Generate Narration" and watch the progress:
+   - Step 1: Parsing slides
+   - Step 2: Generating individual scripts
+   - Step 3: Polishing complete script
+
+5. **Review & Download**:
+   - Preview the complete script
+   - Browse individual slides
+   - Download in Markdown, JSON, or plain text format
+
+### Web Interface Features
+
+- **Real-time Progress**: See exactly what's happening at each step
+- **Interactive Preview**: Switch between complete script and individual slide views
+- **Metrics Dashboard**: View total slides, duration, and per-slide averages
+- **One-Click Downloads**: Export in multiple formats instantly
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **No File Management**: Everything happens in the browser
+
+### Running on a Server
+
+To run the web app on a server:
+
+```bash
+# Run on a specific port
+streamlit run app.py --server.port 8080
+
+# Run with server address
+streamlit run app.py --server.address 0.0.0.0 --server.port 8080
+
+# Run with authentication (recommended for production)
+streamlit run app.py --server.enableCORS false --server.enableXsrfProtection true
+```
+
+For production deployments, consider using [Streamlit Cloud](https://streamlit.io/cloud) or containerizing with Docker.
 
 ## Output Files
 
